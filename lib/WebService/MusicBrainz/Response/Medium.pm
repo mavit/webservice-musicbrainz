@@ -1,4 +1,4 @@
-package WebService::MusicBrainz::Response::DiscList;
+package WebService::MusicBrainz::Response::Medium;
 
 use strict;
 use base 'Class::Accessor';
@@ -7,7 +7,7 @@ our $VERSION = '0.93';
 
 =head1 NAME
 
-WebService::MusicBrainz::Response::DiscList
+WebService::MusicBrainz::Response::Medium
 
 =head1 SYNOPSIS
 
@@ -17,15 +17,13 @@ WebService::MusicBrainz::Response::DiscList
 
 All the methods listed below are accessor methods.  They can take a scalar argument to set the state of the object or without and argument, they will return that state if it is available.
 
-=head2 discs()
+=head2 id()
 
-=head2 count()
-
-=head2 offset()
+=head2 sectors()
 
 =cut
 
-__PACKAGE__->mk_accessors(qw/discs count offset/);
+__PACKAGE__->mk_accessors(qw/position format track-list/);
 
 =head1 AUTHOR
 

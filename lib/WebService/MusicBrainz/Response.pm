@@ -309,7 +309,9 @@ sub _create_artist {
    my ($xSortName) = $xpc->findnodes('mmd:sort-name[1]', $xArtist);
    my ($xName) = $xpc->findnodes('mmd:name[1]', $xArtist);
    my ($xDisambiguation) = $xpc->findnodes('mmd:disambiguation[1]', $xArtist);
-   my ($xLifeSpan) = $xpc->findnodes('mmd:life-span[1]', $xArtist);
+   my ($xLifeSpanBegin) = $xpc->findnodes('mmd:life-span/mmd:begin[1]', $xArtist);
+   my ($xLifeSpanEnd) = $xpc->findnodes('mmd:life-span/mmd:end[1]', $xArtist);
+   my ($xGender) = $xpc->findnodes('mmd:gender[1]', $xArtist);
    my ($xAliasList) = $xpc->findnodes('mmd:alias-list[1]', $xArtist);
    my @xRelationList = $xpc->findnodes('mmd:relation-list', $xArtist);
    my ($xReleaseList) = $xpc->findnodes('mmd:release-list[1]', $xArtist);
@@ -326,8 +328,9 @@ sub _create_artist {
    $artist->name( $xName->textContent() ) if $xName;
    $artist->sort_name( $xSortName->textContent() ) if $xSortName;
    $artist->disambiguation( $xDisambiguation->textContent() ) if $xDisambiguation;
-   $artist->life_span_begin( $xLifeSpan->getAttribute('begin') ) if $xLifeSpan && $xLifeSpan->getAttribute('begin');
-   $artist->life_span_end( $xLifeSpan->getAttribute('end') ) if $xLifeSpan && $xLifeSpan->getAttribute('end');
+   $artist->life_span_begin( $xLifeSpanBegin->textContent() ) if $xLifeSpanBegin;
+   $artist->life_span_end( $xLifeSpanEnd->textContent() ) if $xLifeSpanEnd;
+   $artist->gender( $xGender->textContent() ) if $xGender;
    $artist->score( $xArtist->getAttribute('ext:score') ) if $xArtist->getAttribute('ext:score');
    $artist->alias_list( $self->_create_alias_list( $xAliasList ) ) if $xAliasList;
    $artist->release_list( $self->_create_release_list( $xReleaseList ) ) if $xReleaseList;
@@ -373,12 +376,14 @@ sub _create_release {
 
    my $xpc = $self->xpc();
 
+   my ($xStatus) = $xpc->findnodes('mmd:status[1]', $xRelease);
    my ($xTitle) = $xpc->findnodes('mmd:title[1]', $xRelease);
-   my ($xTextRep) = $xpc->findnodes('mmd:text-representation[1]', $xRelease);
+   my ($xTextRepLanguage) = $xpc->findnodes('mmd:text-representation/mmd:language[1]', $xRelease);
+   my ($xTextRepScript) = $xpc->findnodes('mmd:text-representation/mmd:script[1]', $xRelease);
    my ($xASIN) = $xpc->findnodes('mmd:asin[1]', $xRelease);
    my ($xArtist) = $xpc->findnodes('mmd:artist[1]', $xRelease);
    my ($xReleaseEventList) = $xpc->findnodes('mmd:release-event-list[1]', $xRelease);
-   my ($xDiscList) = $xpc->findnodes('mmd:disc-list[1]', $xRelease);
+   my ($xMediumList) = $xpc->findnodes('mmd:medium-list[1]', $xRelease);
    my ($xPuidList) = $xpc->findnodes('mmd:puid-list[1]', $xRelease);
    my ($xTrackList) = $xpc->findnodes('mmd:track-list[1]', $xRelease);
    my @xRelationList = $xpc->findnodes('mmd:relation-list', $xRelease);
@@ -394,15 +399,16 @@ sub _create_release {
 
    $release->id( $xRelease->getAttribute('id') ) if $xRelease->getAttribute('id');
    $release->type( $xRelease->getAttribute('type') ) if $xRelease->getAttribute('type');
+   $release->status( $xStatus->textContent() ) if $xStatus;
    $release->title( $xTitle->textContent() ) if $xTitle;
-   $release->text_rep_language( $xTextRep->getAttribute('language') ) if $xTextRep && $xTextRep->getAttribute('language');
-   $release->text_rep_script( $xTextRep->getAttribute('script') ) if $xTextRep && $xTextRep->getAttribute('script');
+   $release->text_rep_language( $xTextRepLanguage->textContent() ) if $xTextRepLanguage;
+   $release->text_rep_script( $xTextRepScript->textContent() ) if $xTextRepScript;
    $release->asin( $xASIN->textContent() ) if $xASIN;
    $release->score( $xRelease->getAttribute('ext:score') ) if $xRelease->getAttribute('ext:score');
    $release->artist( $self->_create_artist( $xArtist ) ) if $xArtist;
    $release->release_event_list( $self->_create_release_event_list( $xReleaseEventList ) ) if $xReleaseEventList;
    $release->release_group( $self->_create_release_group( $xReleaseGroup ) ) if $xReleaseGroup;
-   $release->disc_list( $self->_create_disc_list( $xDiscList ) ) if $xDiscList;
+   $release->medium_list( $self->_create_medium_list( $xMediumList ) ) if $xMediumList;
    $release->puid_list( $self->_create_puid_list( $xPuidList ) ) if $xPuidList;
    $release->track_list( $self->_create_track_list( $xTrackList ) ) if $xTrackList;
    $release->tag_list( $self->_create_tag_list( $xTagList ) ) if $xTagList;
@@ -732,43 +738,48 @@ sub _create_release_list {
    return $release_list;
 }
 
-sub _create_disc {
+sub _create_medium {
    my $self = shift;
-   my ($xDisc) = @_;
-
-   require WebService::MusicBrainz::Response::Disc;
-
-   my $disc = WebService::MusicBrainz::Response::Disc->new();
-
-   $disc->id( $xDisc->getAttribute('id') ) if $xDisc->getAttribute('id');
-   $disc->sectors( $xDisc->getAttribute('sectors') ) if $xDisc->getAttribute('sectors');
-
-   return $disc;
-}
-
-sub _create_disc_list {
-   my $self = shift;
-   my ($xDiscList) = @_;
+   my ($xMedium) = @_;
 
    my $xpc = $self->xpc();
 
-   require WebService::MusicBrainz::Response::DiscList;
+   require WebService::MusicBrainz::Response::Medium;
 
-   my $disc_list = WebService::MusicBrainz::Response::DiscList->new();
+   my $medium = WebService::MusicBrainz::Response::Medium->new();
 
-   my @discs;
+   my ($xPosition) = $xpc->findnodes('mmd:position[1]', $xMedium);
+   my ($xFormat) = $xpc->findnodes('mmd:format[1]', $xMedium);
 
-   $disc_list->count( $xDiscList->getAttribute('count') ) if $xDiscList->getAttribute('count');
-   $disc_list->offset( $xDiscList->getAttribute('offset') );
+   $medium->position( $xPosition->textContent() ) if $xPosition;
+   $medium->format( $xFormat->textContent() ) if $xFormat;
 
-   foreach my $xDisc ($xpc->findnodes('mmd:disc', $xDiscList)) {
-      my $disc = $self->_create_disc( $xDisc );
-      push @discs, $disc;
+   return $medium;
+}
+
+sub _create_medium_list {
+   my $self = shift;
+   my ($xMediumList) = @_;
+
+   my $xpc = $self->xpc();
+
+   require WebService::MusicBrainz::Response::MediumList;
+
+   my $medium_list = WebService::MusicBrainz::Response::MediumList->new();
+
+   my @media;
+
+   $medium_list->count( $xMediumList->getAttribute('count') ) if $xMediumList->getAttribute('count');
+   $medium_list->offset( $xMediumList->getAttribute('offset') );
+
+   foreach my $xMedium ($xpc->findnodes('mmd:medium', $xMediumList)) {
+      my $medium = $self->_create_medium( $xMedium );
+      push @media, $medium;
    }
 
-   $disc_list->discs( \@discs );
+   $medium_list->media( \@media );
 
-   return $disc_list;
+   return $medium_list;
 }
 
 sub _create_puid {

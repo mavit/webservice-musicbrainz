@@ -31,6 +31,8 @@ All the methods listed below are accessor methods.  They can take a scalar argum
 
 =head2 life_span_end()
 
+=head2 gender()
+
 =head2 alias_list()
 
 =head2 release_list()
@@ -53,7 +55,7 @@ All the methods listed below are accessor methods.  They can take a scalar argum
 
 =cut
 
-__PACKAGE__->mk_accessors(qw/id type name sort_name disambiguation life_span_begin life_span_end alias_list release_list release_group_list relation_list relation_lists tag_list user_tag_list rating user_rating score/);
+__PACKAGE__->mk_accessors(qw/id type name sort_name disambiguation life_span_begin life_span_end gender alias_list release_list release_group_list relation_list relation_lists tag_list user_tag_list rating user_rating score/);
 
 =head1 AUTHOR
 

@@ -1,5 +1,6 @@
 package WebService::MusicBrainz::Query;
 
+use v5.10.1;
 use strict;
 use LWP::UserAgent;
 use URI;
@@ -52,7 +53,7 @@ sub _init {
    my $web_service_uri_scheme = "http";
    my $web_service_host = $params{HOST} || 'musicbrainz.org';
    my $web_service_namespace = 'ws';
-   my $web_service_version = '1';
+   my $web_service_version = '2';
 
    $web_service_uri->scheme($web_service_uri_scheme);
    $web_service_uri->host($web_service_host);
@@ -96,14 +97,25 @@ sub _url {
    my $class = shift;
    my $params = shift;
 
+   my @param_names = qw(mbid limit offset inc status);
+
    $self->_validate_params($params);
 
    my $url =  $self->{_baseurl} . $class . '/';
    $url .= $params->{MBID} if $params->{MBID};
-   $url .= '?type=xml';
 
-   foreach my $key (keys %{ $params }) {
-      $url .= '&' . lc($key) . '=' . $params->{$key} unless lc($key) eq "mbid";
+   $url .= '?';
+
+   my $query = $params->{'QUERY'} // join '%20AND%20', map { 
+       lc($_). ':'. $params->{$_} 
+   } grep { 
+       not( lc($_) ~~ @param_names ); 
+   } keys %{ $params };
+   $url .= '&query='. $query if $query;
+
+   foreach my $key ( @param_names ) {
+       next if $key eq 'mbid';
+       $url .= '&'. $key. '='. $params->{uc $key} if defined $params->{uc $key};
    }
       
    # warn "URL: $url\n";

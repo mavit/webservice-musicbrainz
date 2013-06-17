@@ -21,6 +21,8 @@ All the methods listed below are accessor methods.  They can take a scalar argum
 
 =head2 type()
 
+=head2 status()
+
 =head2 title()
 
 =head2 text_rep_language()
@@ -33,7 +35,7 @@ All the methods listed below are accessor methods.  They can take a scalar argum
 
 =head2 release_event_list()
 
-=head2 disc_list()
+=head2 medium_list()
 
 =head2 puid_list()
 
@@ -55,7 +57,7 @@ All the methods listed below are accessor methods.  They can take a scalar argum
 
 =cut
 
-__PACKAGE__->mk_accessors(qw/id type title text_rep_language text_rep_script asin artist release_group release_event_list disc_list puid_list track_list relation_list relation_lists tag_list user_tag_list rating user_rating score/);
+__PACKAGE__->mk_accessors(qw/id type status title text_rep_language text_rep_script asin artist release_group release_event_list medium_list puid_list track_list relation_list relation_lists tag_list user_tag_list rating user_rating score/);
 
 =head1 AUTHOR
 

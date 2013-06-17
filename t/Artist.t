@@ -28,9 +28,10 @@ ok( $mbid_response, 'artist by MBID' );
 
 my $mbid_artist = $mbid_response->artist();
 ok( $mbid_artist, 'artist obj');
-ok( $mbid_artist->name() eq "Miranda Lambert", 'artist name'); 
-ok( $mbid_artist->sort_name() eq "Lambert, Miranda", 'artist sort_name'); 
-ok( $mbid_artist->life_span_begin() eq "1983-11-10", 'artist life_span_begin'); 
+is( $mbid_artist->name(), "Miranda Lambert", 'artist name'); 
+is( $mbid_artist->sort_name(), "Lambert, Miranda", 'artist sort_name'); 
+is( $mbid_artist->life_span_begin(), "1983-11-10", 'artist life_span_begin'); 
+is( $mbid_artist->gender(), "Female", 'artist gender');
 
 my $name_response = $ws->search({ NAME => 'Pantera' });
 ok( $name_response, 'artist by NAME' );
@@ -47,6 +48,7 @@ ok( $name_artist->type() eq "Group", 'first artist type' );
 ok( $name_artist->score() > 90, 'first artist score' );
 ok( $name_artist->life_span_begin() eq "1982", 'first artist life-span-begin' );
 ok( $name_artist->life_span_end() eq "2003", 'first artist life-span-end' );
+is( $name_artist->gender(), undef, 'first artist gender');
 
 sleep($sleep_duration);
 
@@ -54,7 +56,7 @@ my $name_limit_response = $ws->search({ NAME => 'Elvis', LIMIT => 3 });
 ok( $name_limit_response, 'artist by NAME LIMIT' );
 my $name_limit_artist_list = $name_limit_response->artist_list();
 ok( $name_limit_artist_list, 'artist list by NAME LIMIT');
-ok( $name_limit_artist_list->count() > 90, 'artist list count LIMIT');
+ok( $name_limit_artist_list->count() > 80, 'artist list count LIMIT');
 my $artist_counter = 0;
 foreach my $artist_node (@{ $name_limit_artist_list->artists() }) {
     $artist_counter++;
@@ -65,7 +67,7 @@ my $name_offset_response = $ws->search({ NAME => 'Elvis', OFFSET => 10 });
 ok( $name_offset_response, 'artist by NAME OFFSET' );
 my $name_offset_artist_list = $name_offset_response->artist_list();
 ok( $name_offset_artist_list, 'artist list OFFSET');
-ok( $name_offset_artist_list->count() > 90, 'artist offset COUNT');
+ok( $name_offset_artist_list->count() > 80, 'artist offset COUNT');
 ok( $name_offset_artist_list->offset() == 10, 'artist offset OFFSET');
 
 sleep($sleep_duration);
@@ -90,7 +92,7 @@ ok( scalar(@{ $mbid_aliases_alias_list->aliases() }) > 2, 'artist aliases ALIAS 
 
 sleep($sleep_duration);
 
-my $mbid_release_groups_response = $ws->search({ MBID => '4dca4bb2-23ba-4103-97e6-5810311db33a', INC => 'release-groups sa-Album' });
+my $mbid_release_groups_response = $ws->search({ MBID => '4dca4bb2-23ba-4103-97e6-5810311db33a', INC => 'release-groups releases' });
 ok( $mbid_release_groups_response, 'artist by MBID RELEASE-GROUPS' );
 my $mbid_rg_artist = $mbid_release_groups_response->artist();
 ok( $mbid_rg_artist, 'artist release-groups');
@@ -109,7 +111,7 @@ ok( $mbid_artist_rels_artist->name() eq "Coheed and Cambria", 'artist artist-rel
 ok( $mbid_artist_rels_artist->sort_name() eq "Coheed and Cambria", 'artist artist-rels SORT NAME');
 my $mbid_artist_rels_list = $mbid_artist_rels_artist->relation_list();
 ok( $mbid_artist_rels_list, 'artist artist-rels RELATION LIST');
-ok( $mbid_artist_rels_list->target_type() eq "Artist",'artist artist-rels relation-list TARGET TYPE');
+ok( $mbid_artist_rels_list->target_type() eq "artist",'artist artist-rels relation-list TARGET TYPE');
 foreach my $relation (@{ $mbid_artist_rels_list->relations() }) {
     if($relation->target() eq "56c0c0ec-5973-4ce8-9fd8-ba7b46ce0a9e") {
         ok( $relation->type() eq "MemberOfBand",  'artist artist-rels relation TYPE');
@@ -128,7 +130,7 @@ foreach my $relation (@{ $mbid_artist_rels_list->relations() }) {
 
 sleep($sleep_duration);
 
-my $mbid_label_rels_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'label-rels+sa-Official' });
+my $mbid_label_rels_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'label-rels releases', STATUS => 'official' });
 ok( $mbid_label_rels_response, 'artist by MBID LABEL-RELS' );
 my $mbid_label_rels_artist = $mbid_label_rels_response->artist();
 ok( $mbid_label_rels_artist,'artist label rels ARTIST');
@@ -138,7 +140,7 @@ foreach my $release (@{ $mbid_label_rels_release_list->releases() }) {
     if($release->id() eq "940d6fba-3603-4ac2-8f5d-ea0a11e51765") {
         ok($release->type() eq "Album Official",'artist label rels release TYPE');
         my $relation_list = $release->relation_list();
-        ok($relation_list->target_type() eq "Label", 'artist label-rels release relation_list TYPE');
+        ok($relation_list->target_type() eq "label", 'artist label-rels release relation_list TYPE');
         foreach my $relation (@{ $relation_list->relations() }) {
            if($relation->target() eq "82275f26-c259-4a3e-a476-91277f1d0c3d") {
                ok($relation->type() eq "Publishing", 'artist label-rels relation TYPE');
@@ -162,7 +164,7 @@ ok( $mbid_release_rels_artist->sort_name() eq "Metallica", 'artist release rels 
 ok( $mbid_release_rels_artist->life_span_begin() eq "1981-10", 'artist release rels artist BEGIN');
 my $mbid_release_rels_list = $mbid_release_rels_artist->relation_list();
 ok( $mbid_release_rels_list, 'artist release rels RELATION LIST');
-ok( $mbid_release_rels_list->target_type() eq "Release", 'artist release rels RELATION LIST');
+ok( $mbid_release_rels_list->target_type() eq "release", 'artist release rels RELATION LIST');
 ok( scalar(@{ $mbid_release_rels_list->relations() }) > 0, 'artist release rels RELEASES');
 foreach my $relation (@{ $mbid_release_rels_list->relations() }) {
     if($relation->target() eq "552c4163-397e-4ae3-8da5-8f551ebbdbc1") {
@@ -177,21 +179,21 @@ foreach my $relation (@{ $mbid_release_rels_list->relations() }) {
 
 sleep($sleep_duration);
 
-my $mbid_track_rels_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'track-rels' });
-ok( $mbid_track_rels_response, 'artist by MBID TRACK-RELS' );
-my $mbid_track_rels_artist = $mbid_track_rels_response->artist();
-ok( $mbid_track_rels_artist, 'artist track rels ARTIST' );
-ok( $mbid_track_rels_artist->name() eq "Metallica", 'artist track rels artist NAME');
-ok( $mbid_track_rels_artist->sort_name() eq "Metallica", 'artist track rels artist SORT NAME');
-my $mbid_track_rels_list = $mbid_track_rels_artist->relation_list();
-ok( $mbid_track_rels_list, 'artist track rels artist RELATION LIST' );
-ok( $mbid_track_rels_list->target_type() eq "Track", 'artist track rels artist relation list TYPE');
-ok( scalar(@{ $mbid_track_rels_list->relations() }) > 0, 'artist track rels artist relation list RELATIONS');
-foreach my $track_rel (@{ $mbid_track_rels_list->relations() }) {
-    if($track_rel->target() eq "f415a50d-4594-4d39-b84d-57afd433ef6d") {
-        ok( $track_rel->type() eq "Performer", 'artist track rels relation TYPE');
-        ok( $track_rel->track()->title() eq "Halloween (feat. Metallica)", 'artist track rels relation track TITLE');
-        ok( $track_rel->track()->duration() eq "174200", 'artist track rels relation track DURATION');
+my $mbid_recording_rels_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'recording-rels' });
+ok( $mbid_recording_rels_response, 'artist by MBID RECORDING-RELS' );
+my $mbid_recording_rels_artist = $mbid_recording_rels_response->artist();
+ok( $mbid_recording_rels_artist, 'artist recording rels ARTIST' );
+ok( $mbid_recording_rels_artist->name() eq "Metallica", 'artist recording rels artist NAME');
+ok( $mbid_recording_rels_artist->sort_name() eq "Metallica", 'artist recording rels artist SORT NAME');
+my $mbid_recording_rels_list = $mbid_recording_rels_artist->relation_list();
+ok( $mbid_recording_rels_list, 'artist recording rels artist RELATION LIST' );
+ok( $mbid_recording_rels_list->target_type() eq "recording", 'artist recording rels artist relation list TYPE');
+ok( scalar(@{ $mbid_recording_rels_list->relations() }) > 0, 'artist recording rels artist relation list RELATIONS');
+foreach my $recording_rel (@{ $mbid_recording_rels_list->relations() }) {
+    if($recording_rel->target() eq "f415a50d-4594-4d39-b84d-57afd433ef6d") {
+        ok( $recording_rel->type() eq "performer", 'artist recording rels relation TYPE');
+        ok( $recording_rel->recording()->title() eq "Halloween (feat. Metallica)", 'artist recording rels relation recording TITLE');
+        ok( $recording_rel->recording()->duration() eq "174200", 'artist recording rels relation recording DURATION');
         last;
     }
 }
@@ -204,7 +206,7 @@ ok( $mbid_url_rels_artist->name() eq "Coheed and Cambria", 'artist url rels arti
 ok( $mbid_url_rels_artist->sort_name() eq "Coheed and Cambria", 'artist url rels artist SORT NAME');
 my $mbid_url_rels_list = $mbid_url_rels_artist->relation_list();
 ok( $mbid_url_rels_list, 'artist url rels artist RELATION LIST');
-ok( $mbid_url_rels_list->target_type() eq "Url", 'artist url rels artist relation list TYPE');
+ok( $mbid_url_rels_list->target_type() eq "url", 'artist url rels artist relation list TYPE');
 foreach my $url_rel (@{ $mbid_url_rels_list->relations() }) {
     if($url_rel->type() eq "Wikipedia") { 
         ok($url_rel->target() eq "http://en.wikipedia.org/wiki/Coheed_and_Cambria", 'artist url rels relation URL TYPE');
@@ -249,44 +251,24 @@ ok( $mbid_ratings_rating->value() > 3 , 'artist ratings rating VALUE');
 
 sleep($sleep_duration);
 
-my $mbid_counts_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'counts+sa-Official' });
-ok( $mbid_counts_response, 'artist by MBID COUNTS' );
-my $mbid_counts_artist = $mbid_counts_response->artist();
-ok( $mbid_counts_artist, 'artist counts ARTIST');
-my $mbid_counts_rel_list = $mbid_counts_artist->release_list();
-ok( $mbid_counts_rel_list, 'artist counts artist RELEASE LIST');
-foreach my $release (@{ $mbid_counts_rel_list->releases() }) {
-    if($release->id() eq "fed37cfc-2a6d-4569-9ac0-501a7c7598eb") {
-        ok( $release->type() eq "Album Official", 'artist counts release TYPE');
-        ok( $release->title() eq "Master of Puppets", 'artist counts release TITLE');
-        ok( $release->text_rep_language() eq "ENG", 'artist counts release TEXT LANG');
-        ok( $release->text_rep_script() eq "Latn", 'artist counts release TEXT SCRIPT');
-        ok( $release->asin() eq "B000025ZVE", 'artist counts release ASIN');
-        ok( $release->disc_list()->count() > 10, 'artist counts release DISC LIST COUNT');
-        ok( $release->track_list()->count() > 5, 'artist counts release TRACK LIST COUNT');
-        ok( $release->release_event_list()->count() > 10, 'artist counts release event list COUNT');
-        last;
-    }
-}
-
-my $mbid_rel_events_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'release-events+sa-Official' });
-ok( $mbid_rel_events_response, 'artist by MBID RELEASE-EVENTS' );
-my $mbid_rel_events_artist = $mbid_rel_events_response->artist();
-ok( $mbid_rel_events_artist, 'artist rel events ARTIST');
-ok( $mbid_rel_events_artist->name() eq "Metallica", 'artist rel events artist NAME');
-ok( $mbid_rel_events_artist->sort_name() eq "Metallica", 'artist rel events artist SORT NAME');
-foreach my $release (@{ $mbid_rel_events_artist->release_list()->releases() }) {
-    if($release->id() eq "a89e1d92-5381-4dab-ba51-733137d0e431") {
-        ok( $release->type() eq "Album Official", 'artist rel events release TYPE');
-        ok( $release->title() eq "Kill 'em All", 'artist rel events release TITLE');
-        ok( $release->text_rep_language() eq "ENG", 'artist rel events release LANG');
-        ok( $release->text_rep_script() eq "Latn", 'artist rel events release SCRIPT');
+my $mbid_releases_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'releases', STATUS => 'official' });
+ok( $mbid_releases_response, 'artist by MBID RELEASES' );
+my $mbid_releases_artist = $mbid_releases_response->artist();
+ok( $mbid_releases_artist, 'artist releases ARTIST');
+ok( $mbid_releases_artist->name() eq "Metallica", 'artist releases artist NAME');
+ok( $mbid_releases_artist->sort_name() eq "Metallica", 'artist releases artist SORT NAME');
+foreach my $release (@{ $mbid_releases_artist->release_list()->releases() }) {
+    if($release->id() eq "834a7aa9-c7f5-3571-a812-46c6d134a98d") {
+        is( $release->status(), "Official", 'artist releases release STATUS');
+        ok( $release->title() eq "Kill 'em All", 'artist releases release TITLE');
+        is( $release->text_rep_language(), "eng", 'artist releases release LANG');
+        is( $release->text_rep_script(), "Latn", 'artist releases release SCRIPT');
         foreach my $event (@{ $release->release_event_list()->events() }) {
            if($event->barcode() && $event->barcode() eq "075596076623") {
-               ok( $event->date() eq "1988-01-15", 'artist rel events release events DATE');
-               ok( $event->country() eq "US", 'artist rel events release events COUNTRY');
-               ok( $event->catalog_number() eq "CD 60766", 'artist rel events release events CATALOG NUMBER');
-               ok( $event->format() eq "CD", 'artist rel events release events FORMAT');
+               ok( $event->date() eq "1988-01-15", 'artist releases release events DATE');
+               ok( $event->country() eq "US", 'artist releases release events COUNTRY');
+               ok( $event->catalog_number() eq "CD 60766", 'artist releases release events CATALOG NUMBER');
+               ok( $event->format() eq "CD", 'artist releases release events FORMAT');
                last;
            }
         }
@@ -296,30 +278,31 @@ foreach my $release (@{ $mbid_rel_events_artist->release_list()->releases() }) {
 
 sleep($sleep_duration);
 
-my $mbid_discs_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'discs+sa-Official' });
-ok( $mbid_discs_response, 'artist by MBID DISCS' );
-my $mbid_discs_artist = $mbid_discs_response->artist();
-ok( $mbid_discs_artist, 'artist discs ARTIST');
-ok( $mbid_discs_artist->name() eq "Metallica", 'artist discs artist NAME');
-ok( $mbid_discs_artist->sort_name() eq "Metallica", 'artist discs artist SORT NAME');
-foreach my $release (@{ $mbid_discs_artist->release_list()->releases() }) {
-    if($release->id() eq "456efd39-f0dc-4b4d-87c7-82bbc562d8f3") {
-        ok( $release->type() eq "Album Official", 'artist discs release TYPE');
-        ok( $release->title() eq "Ride the Lightning", 'artist discs release TITLE');
-        ok( $release->text_rep_language() eq "ENG", 'artist discs release LANG');
-        ok( $release->text_rep_script() eq "Latn", 'artist discs release SCRIPT');
-        ok( $release->asin() eq "B000002H2H", 'artist discs release ASIN');
-        foreach my $disc (@{ $release->disc_list()->discs() }) {
-           if($disc->id() eq "UhuTnSAqRRgWbuC0zf1rvAzFX9M-") {
-               ok( $disc->sectors() eq "213595", 'artist discs disc-list disc SECTORS');
-               last;
-           }
+my $mbid_media_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'releases media', STATUS => 'official' });
+ok( $mbid_media_response, 'artist by MBID MEDIA' );
+my $mbid_media_artist = $mbid_media_response->artist();
+ok( $mbid_media_artist, 'artist media ARTIST');
+ok( $mbid_media_artist->name() eq "Metallica", 'artist media artist NAME');
+ok( $mbid_media_artist->sort_name() eq "Metallica", 'artist media artist SORT NAME');
+foreach my $release (@{ $mbid_media_artist->release_list()->releases() }) {
+    if($release->id() eq "51eb10e0-2b9e-3906-a8f1-db74b346cba5") {
+        is( $release->status(), "Official", 'artist media release TYPE');
+        ok( $release->title() eq "Ride the Lightning", 'artist media release TITLE');
+        ok( $release->text_rep_language() eq "eng", 'artist media release LANG');
+        ok( $release->text_rep_script() eq "Latn", 'artist media release SCRIPT');
+        ok( $release->asin() eq "B000002H2H", 'artist media release ASIN');
+        foreach my $disc (@{ $release->medium_list()->media() }) {
+            # FIXME: add media tests here.
+           # if($disc->id() eq "UhuTnSAqRRgWbuC0zf1rvAzFX9M-") {
+           #     ok( $disc->sectors() eq "213595", 'artist media disc-list disc SECTORS');
+           #     last;
+           # }
         }
         last;
     }
 }
 
-my $mbid_labels_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'labels+release-events+sa-Official' });
+my $mbid_labels_response = $ws->search({ MBID => '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', INC => 'releases', STATUS => 'official' });
 ok( $mbid_labels_response, 'artist by MBID LABELS' );
 my $mbid_labels_artist = $mbid_labels_response->artist();
 ok( $mbid_labels_artist, 'artist labels ARTIST');
@@ -327,9 +310,9 @@ ok( $mbid_labels_artist->name() eq "Metallica", 'artist labels artist NAME');
 ok( $mbid_labels_artist->sort_name() eq "Metallica", 'artist labels artist SORT NAME');
 foreach my $release (@{ $mbid_labels_artist->release_list()->releases() }) {
     if($release->id() eq "456efd39-f0dc-4b4d-87c7-82bbc562d8f3") {
-        ok( $release->type() eq "Album Official", 'artist labels release TYPE');
+        is( $release->type(), "Official", 'artist labels release TYPE');
         ok( $release->title() eq "Ride the Lightning", 'artist labels release TITLE');
-        ok( $release->text_rep_language() eq "ENG", 'artist labels release LANG');
+        is( $release->text_rep_language(), "eng", 'artist labels release LANG');
         ok( $release->text_rep_script() eq "Latn", 'artist labels release SCRIPT');
         ok( $release->asin() eq "B000002H2H", 'artist labels release ASIN');
         foreach my $event (@{ $release->release_event_list()->events() }) {

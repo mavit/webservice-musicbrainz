@@ -53,8 +53,8 @@ sub _init {
 
    my $q = WebService::MusicBrainz::Query->new(@_);
 
-   $q->set_url_params(qw/mbid name limit offset query/);
-   $q->set_inc_params(qw/aliases release-groups artist-rels release-rels track-rels url-rels sa- va- label-rels tags ratings user-tags user-ratings counts release-events discs labels/);
+   $q->set_url_params(qw/mbid artist limit offset query status/);
+   $q->set_inc_params(qw/aliases release-groups artist-rels release-rels recording-rels url-rels label-rels tags ratings user-tags user-ratings counts releases discs labels/);
 
    $self->{_query} = $q;
 }
@@ -116,7 +116,7 @@ my $mbid_aliases_response = $ws->search({ MBID => '070d193a-845c-479f-980e-bef15
 
 =head3 Find a artist by MBID and include release groups
 
-my $mbid_release_groups_response = $ws->search({ MBID => '4dca4bb2-23ba-4103-97e6-5810311db33a', INC => 'release-groups sa-Album' });
+my $mbid_release_groups_response = $ws->search({ MBID => '4dca4bb2-23ba-4103-97e6-5810311db33a', INC => 'release-groups' });
 
 =head3 Find a artist by MBID and include artist relations
 
@@ -171,8 +171,12 @@ my $q1_response = $ws->search({ QUERY => 'begin:1990 AND type:group'});
 sub search {
    my $self = shift;
    my $params = shift;
-
-   my $response = $self->query()->get('artist', $params);    
+   my %params_remapped = map {
+       my $key = lc($_) eq 'name' ? 'artist' : $_;
+       ($key => $params->{$_});
+   } keys $params;
+   
+   my $response = $self->query()->get('artist', \%params_remapped);    
 
    return $response;
 }
